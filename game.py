@@ -29,6 +29,10 @@ class Room:
         for mobile in self.mobiles:
             mobile.tick()
 
+    def enter(self, mobile):
+        self.mobiles.append(mobile)
+        mobile.room = self
+
 
 class Mobile:
     def __init__(self, name=None):
@@ -103,10 +107,22 @@ class Mobile:
 
 class Player(Mobile):
     def tick(self):
+        self.random_movement()
         pass
 
 
 vasya = Player('Вася')
 petya = Player("Петя")
-vasya.say("Я вася")
-petya.say("Я петя")
+
+world = World()
+gus_city = Location()
+world.locations.append(gus_city)
+gus_city_main = Room()
+gus_city.rooms.append(gus_city_main)
+
+gus_city_main.enter(vasya)
+gus_city_main.enter(petya)
+world.tick()
+world.tick()
+world.tick()
+world.tick()
