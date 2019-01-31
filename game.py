@@ -1,9 +1,14 @@
+import time
+last_tick = 0
+
 class World:
     def __init__(self):
         self.locations = []
 
     def tick(self):
+        global last_tick
         print("TICK!!!")
+        last_tick = time.time_ns()
         for location in self.locations:
             location.tick()
 
@@ -161,12 +166,9 @@ gus_city_main.enter(vasya)
 gus_city_main.enter(petya)
 
 step = 0
-import time
-last = time.time_ns()
 
 while step < 100:
-    while time.time_ns() < last + 1000000000:
+    while time.time_ns() < last_tick + 1000000000:
         pass
-    last = time.time_ns()
     step = step+1
     world.tick()
