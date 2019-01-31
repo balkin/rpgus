@@ -159,7 +159,14 @@ gus_city.generate_rooms()
 gus_city_main = gus_city.rooms[0]
 gus_city_main.enter(vasya)
 gus_city_main.enter(petya)
-world.tick()
-world.tick()
-world.tick()
-world.tick()
+
+step = 0
+import time
+last = time.time_ns()
+
+while step < 100:
+    while time.time_ns() < last + 1000000000:
+        pass
+    last = time.time_ns()
+    step = step+1
+    world.tick()
