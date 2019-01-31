@@ -6,7 +6,7 @@ class World:
         self.locations = []
 
     def tick(self):
-        global last_tick
+        global last_tickK
         print("TICK!!!")
         last_tick = time.time_ns()
         for location in self.locations:
@@ -167,8 +167,13 @@ gus_city_main.enter(petya)
 
 step = 0
 
-while step < 100:
+
+def wait_for_tick():
     while time.time_ns() < last_tick + 1000000000:
         pass
+
+
+while step < 100:
+    wait_for_tick()
     step = step+1
     world.tick()
