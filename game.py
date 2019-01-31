@@ -85,6 +85,21 @@ class Mobile:
         self.room.mobiles.append(self)
         print("{} двигается на юг в комнату {}", self.name, self.room.name)
 
+    def random_movement(self):
+        import random
+        i = random.randint(1, 4)
+        if i == 1:
+            self.north()
+            pass
+        elif i == 2:
+            self.west()
+            pass
+        elif i == 3:
+            self.east()
+            pass
+        elif i == 4:
+            self.south()
+            pass
 
 class Player(Mobile):
     def tick(self):
