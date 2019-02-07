@@ -1,17 +1,23 @@
-import datetime
 import time
-last_tick = 0
+
 
 class World:
     def __init__(self):
         self.ticked = {}
         self.locations = []
+        self.last_tick = 0
+        self.step = 0
+
+    def wait_for_tick(self):
+        while time.time_ns() < self.last_tick + 1000000000:
+            pass
 
     def tick(self):
-        global last_tick
+        self.step = self.step + 1
         self.ticked.clear()
-        print("TICK!!!", datetime.datetime.now())
-        last_tick = time.time_ns()
+        # import datetime
+        # print("TICK!!!", datetime.datetime.now())
+        self.last_tick = time.time_ns()
         for location in self.locations:
             location.tick()
 
@@ -22,6 +28,7 @@ class World:
         if self.can_tick(mobile):
             mobile.tick()
             self.ticked[mobile] = True
+
 
 class Location:
     def __init__(self):
@@ -55,7 +62,7 @@ class GusGrad(Location):
 
 
 class Room:
-    def __init__(self, name = 'Комната'):
+    def __init__(self, name='Комната'):
         self.north = None
         self.south = None
         self.west = None
@@ -87,10 +94,13 @@ class Room:
         another.north = self
         self.south = another
 
+
 class Mobile:
-    def __init__(self, name=None):
+    def __init__(self, name=None, strength=1, health=10):
         self.name = name
         self.room = None
+        self.strength = strength
+        self.health = health
 
     def tick(self):
         pass
@@ -121,7 +131,7 @@ class Mobile:
         self.room = self.room.west
         old.mobiles.remove(self)
         self.room.mobiles.append(self)
-        print("{} двигается на запад в комнату {}".format(self.name, self.room.name) )
+        print("{} двигается на запад в комнату {}".format(self.name, self.room.name))
 
     def east(self):
         if self.room.east is None:
@@ -149,26 +159,38 @@ class Mobile:
         import random
         i = random.randint(1, 4)
         if i == 1:
-            self.north()
+            if self.room.north:
+                self.north()
             pass
         elif i == 2:
-            self.west()
+            if self.room.west:
+                self.west()
             pass
         elif i == 3:
-            self.east()
+            if self.room.east:
+                self.east()
             pass
         elif i == 4:
-            self.south()
+            if self.room.south:
+                self.south()
             pass
+
 
 class Player(Mobile):
     def tick(self):
+        old_room = self.room
         self.random_movement()
-        pass
+        if old_room != self.room:
+            for mob in self.room.mobiles:
+                if mob != self and mob.__class__ == Player:
+                    if self.health >= mob.health:
+                        self.emote("злобно ухмыляется в сторону " + mob.name)
+                    else:
+                        self.emote("с завистью смотрит в сторону " + mob.name)
 
 
-vasya = Player('Вася')
-petya = Player("Петя")
+vasya = Player('Вася', strength=2, health=20)
+petya = Player("Петя", strength=1, health=40)
 
 world = World()
 gus_city = GusGrad()
@@ -178,15 +200,6 @@ gus_city_main = gus_city.rooms[0]
 gus_city_main.enter(vasya)
 gus_city_main.enter(petya)
 
-step = 0
-
-
-def wait_for_tick():
-    while time.time_ns() < last_tick + 1000000000:
-        pass
-
-
-while step < 100:
-    wait_for_tick()
-    step = step+1
+while world.step < 100:
+    world.wait_for_tick()
     world.tick()
