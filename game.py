@@ -4,11 +4,12 @@ last_tick = 0
 
 class World:
     def __init__(self):
+        self.ticked = {}
         self.locations = []
 
     def tick(self):
-        global last_tick, ticked
-        self.ticked = {}
+        global last_tick
+        self.ticked.clear()
         print("TICK!!!", datetime.datetime.now())
         last_tick = time.time_ns()
         for location in self.locations:
