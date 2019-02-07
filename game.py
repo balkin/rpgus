@@ -29,6 +29,18 @@ class World:
             mobile.tick()
             self.ticked[mobile] = True
 
+    def replace_with_corpse(self, victim):
+        corpse = FloorObject(name="Труп " + victim.name)
+        room = victim.room
+        room.mobiles.remove(self)
+        room.floor.append(corpse)
+        victim.emote("превращается в труп")
+
+    def rotten(self, victim):
+        victim.emote("превращается в пыль")
+        victim.room.floor.remove(victim)
+        pass
+
 
 class Location:
     def __init__(self):
@@ -68,6 +80,7 @@ class Room:
         self.west = None
         self.east = None
         self.mobiles = []
+        self.floor = []
         self.name = name
 
     def tick(self):
@@ -95,24 +108,55 @@ class Room:
         self.south = another
 
 
+class FloorObject:
+    def __init__(self, name="Объект на полу", rotting = False, rotDelta = 1, rotValue = 10, rotThreshold = 3, room=None):
+        self.rotting = rotting
+        self.rotDelta = rotDelta
+        self.rotValue = rotValue
+        self.rotThreshold = rotThreshold
+        self.name = name
+        self.room = room
+
+    def tick(self):
+        if self.rotting:
+            self.rotValue = self.rotValue - self.rotDelta
+            if self.rotValue % self.rotThreshold == 0:
+                self.emote("тихонько гниёт")
+            if self.rotValue == 0:
+                world.rotten(self)
+
+    def emote(self, emotion):
+        print("{} {}".format(self.name, emotion))
+
+
 class Mobile:
     def __init__(self, name=None, strength=1, health=10):
         self.name = name
         self.room = None
         self.strength = strength
         self.health = health
+        self.fighting = None
 
     def tick(self):
-        pass
+        if not self.alive():
+            world.replace_with_corpse(self)
+            return
+        if self.fighting:
+            self.maybe_update_fighting()
 
     def say(self, phrase):
         print("{} говорит: {}".format(self.name, phrase))
+
+    def attack(self, victim):
+        print("{} нападает на {}".format(self.name, victim.name))
+        self.fighting = victim
+        victim.fighting = self
 
     def emote(self, emotion):
         print("{} {}".format(self.name, emotion))
 
     def north(self):
-        if self.room.north is None:
+        if self.room.north is None or self.cannot_move():
             print("{} не может идти на север".format(self.name))
             return
 
@@ -123,7 +167,7 @@ class Mobile:
         print("{} двигается на север в комнату {}".format(self.name, self.room.name))
 
     def west(self):
-        if self.room.west is None:
+        if self.room.west is None or self.cannot_move():
             print("{} не может идти на запад".format(self.name))
             return
 
@@ -134,7 +178,7 @@ class Mobile:
         print("{} двигается на запад в комнату {}".format(self.name, self.room.name))
 
     def east(self):
-        if self.room.east is None:
+        if self.room.east is None or self.cannot_move():
             print("{} не может идти на восток".format(self.name))
             return
 
@@ -145,7 +189,7 @@ class Mobile:
         print("{} двигается на восток в комнату {}".format(self.name, self.room.name))
 
     def south(self):
-        if self.room.south is None:
+        if self.room.south is None or self.cannot_move():
             print("{} не может идти на юг".format(self.name))
             return
 
@@ -175,9 +219,31 @@ class Mobile:
                 self.south()
             pass
 
+    def cannot_move(self):
+        if self.fighting:
+            return self.fighting.room == self.room
+
+    def alive(self):
+        return self.health > 0
+
+    def maybe_update_fighting(self):
+        self.deal_damage(self.fighting)
+        if not self.fighting.alive():
+            self.fighting.fighting = None
+            self.fighting = None
+            self.emote("завершил бой")
+
+    def deal_damage(self, fighting):
+        damage = self.strength
+        self.emote("наносит " + str(damage) + " единиц урона " + fighting.name)
+        fighting.health = fighting.health - damage
+
 
 class Player(Mobile):
     def tick(self):
+        super().tick()
+        if not self.alive():
+            return
         old_room = self.room
         self.random_movement()
         if old_room != self.room:
@@ -185,6 +251,7 @@ class Player(Mobile):
                 if mob != self and mob.__class__ == Player:
                     if self.health >= mob.health:
                         self.emote("злобно ухмыляется в сторону " + mob.name)
+                        self.attack(mob)
                     else:
                         self.emote("с завистью смотрит в сторону " + mob.name)
 
