@@ -30,9 +30,9 @@ class World:
             self.ticked[mobile] = True
 
     def replace_with_corpse(self, victim):
-        corpse = FloorObject(name="Труп " + victim.name)
+        corpse = FloorObject(name="Труп " + victim.name, rotting=True)
         room = victim.room
-        room.mobiles.remove(self)
+        room.mobiles.remove(victim)
         room.floor.append(corpse)
         victim.emote("превращается в труп")
 
