@@ -1,3 +1,4 @@
+import datetime
 import time
 last_tick = 0
 
@@ -6,12 +7,20 @@ class World:
         self.locations = []
 
     def tick(self):
-        global last_tickK
-        print("TICK!!!")
+        global last_tick, ticked
+        self.ticked = {}
+        print("TICK!!!", datetime.datetime.now())
         last_tick = time.time_ns()
         for location in self.locations:
             location.tick()
 
+    def can_tick(self, mobile):
+        return not self.ticked.__contains__(mobile)
+
+    def make_tick(self, mobile):
+        if self.can_tick(mobile):
+            mobile.tick()
+            self.ticked[mobile] = True
 
 class Location:
     def __init__(self):
@@ -55,7 +64,7 @@ class Room:
 
     def tick(self):
         for mobile in self.mobiles:
-            mobile.tick()
+            world.make_tick(mobile)
 
     def enter(self, mobile):
         self.mobiles.append(mobile)
@@ -87,6 +96,9 @@ class Mobile:
 
     def say(self, phrase):
         print("{} говорит: {}".format(self.name, phrase))
+
+    def emote(self, emotion):
+        print("{} {}".format(self.name, emotion))
 
     def north(self):
         if self.room.north is None:
